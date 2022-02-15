@@ -1,0 +1,110 @@
+--ini functionnya
+removeHooks()
+
+function getArgs(str)
+local args = {}
+for i in str:gmatch('[^%s]+') do
+args[#args+1] = i
+end
+return args
+end
+
+function chat()
+
+Dropcuy = true
+
+addHook('OnVarlist', 'command', function(vlist)
+if vlist[0]=="OnConsoleMessage" then
+pname__ = vlist[1]:match('<`.[^`]+'):sub(4)
+pcmd__ = vlist[1]:match('`$[^`]+'):sub(3)
+
+if pcmd__ and pcmd__:sub(1,1) == '!' then
+pcmd__ = getArgs(pcmd__:sub(2))
+
+if pcmd__[1] == 'stop' then
+sendPacket('action|input\n|text|Dropcuy `#OFF',2)
+sleep(200)
+sendPacket('action|input\n|text|`6Otw Berhenti Kak',2)
+Dropcuy = false
+elseif pcmd__[1] == 'start' then
+sendPacket('action|input\n|text|Dropcuy `#ON',2)
+Dropcuy = true
+end
+end
+end
+end)
+end
+
+function drop(id, count)
+sendPacket("action|drop\n|itemID|"..id, 2)
+sendPacket(([[action|dialog_return
+dialog_name|drop_item
+itemID|%d|
+count|%d]]):format(id, count), 2)
+end
+
+function moveWorld(nameworld)
+sendPacket("action|join_request\nname|"..nameworld, 3)
+sleep(1000)
+end
+
+function collectItems()
+pos = getLocal().pos
+for _, obj in pairs(getObjects()) do
+posx = math.abs(pos.x - obj.pos.x)
+posy = math.abs(pos.y - obj.pos.y)
+if posx < 25 and posy < 25 then
+pkt = {}
+pkt.type = 11
+pkt.int_data = obj.oid
+pkt.pos_x = obj.pos.x
+pkt.pos_y = obj.pos.y
+sendPacketRaw(pkt)
+sleep(50)
+end
+end
+end
+
+function findBlock(id)
+for _,v in ipairs(getTiles()) do
+if v.fg==id then
+findPath(v.pos.x, v.pos.y)
+sleep(1000)
+collectItems()
+sleep(1000)
+end
+end
+end
+
+function findPup(id)
+for _,v in ipairs(getTiles()) do
+if v.fg==id then
+findPath(v.pos.x -1, v.pos.y)
+sleep(1000)
+drop(idBarang,200)
+sleep(1000)
+end
+end
+end
+
+--Setting Disini
+worldBlock="WORLD1"
+worldDrop="WORLD2"
+tempat=5040
+tempat2=5040
+idBarang=5666
+
+--ini programnya
+chat()
+while true do
+if Dropcuy then
+moveWorld(worldBlock)
+sleep(1000)
+findBlock(tempat)
+sleep(1000)
+moveWorld(worldDrop)
+sleep(1000)
+findPup(tempat2,idBarang)
+sleep(1000)
+end
+end
